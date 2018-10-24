@@ -1,5 +1,8 @@
 """ JSON serializer for Elasticsearch use
 """
+
+from elasticsearch import compat
+import json
 from elasticsearch.serializer import JSONSerializer
 
 
@@ -20,3 +23,12 @@ class CMRESSerializer(JSONSerializer):
             return super(CMRESSerializer, self).default(data)
         except TypeError:
             return str(data)
+    def dumps(self, data):
+        # don't serialize strings
+        if isinstance(data, compat.string_types):
+            return data
+        try:
+            return json.dumps(data, default=self.default, ensure_ascii=True)
+        except (ValueError, TypeError) as e:
+            raise exceptions.SerializationError(data, e)
+            
